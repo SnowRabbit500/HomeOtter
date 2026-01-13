@@ -2,7 +2,7 @@
 
 **HomeOtter** is a modern, lightweight macOS menu bar application designed to keep your Home Assistant instance right at your fingertips. Monitor your system's health, track specific sensors live in your menu bar, and receive native notifications—all with a beautiful, native macOS interface.
 
-![HomeOtter Dashboard](https://raw.githubusercontent.com/yourusername/HomeOtter/main/Screenshot.png) *(Note: Add your own screenshot here!)*
+![HomeOtter Dashboard](https://raw.githubusercontent.com/SnowRabbit500/HomeOtter/main/Screenshot.png) *(Add your own screenshot here!)*
 
 ## ✨ Features
 
@@ -22,16 +22,6 @@
 -   **macOS**: 13.0 (Ventura) or later.
 -   **Home Assistant**: A running instance accessible via URL.
 -   **Token**: A [Long-Lived Access Token](https://www.home-assistant.io/docs/authentication/#long-lived-access-token) from your Home Assistant profile.
-
-### Installation
-
-1.  Clone this repository:
-    ```bash
-    git clone https://github.com/yourusername/HomeOtter.git
-    ```
-2.  Open `HomeOtter.xcodeproj` in **Xcode**.
-3.  Select your development team in the "Signing & Capabilities" tab.
-4.  Build and run (`Cmd + R`).
 
 ## ⚙️ Configuration
 
