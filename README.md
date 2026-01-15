@@ -6,19 +6,19 @@
 
 <p align="center">
   <a href="https://i.postimg.cc/9XB1B7QM/Screenshot-2026-01-15-at-08-18-41.png" target="_blank">
-    <img src="https://i.postimg.cc/9XB1B7QM/Screenshot-2026-01-15-at-08-18-41.png" alt="HomeOtter Dashboard" width="280">
-  </a>
-  <a href="https://i.postimg.cc/pXhhLw4P/Screenshot-2026-01-15-at-08-21-44.png" target="_blank">
-    <img src="https://i.postimg.cc/pXhhLw4P/Screenshot-2026-01-15-at-08-21-44.png" alt="HomeOtter System Health" width="280">
+    <img src="https://i.postimg.cc/9XB1B7QM/Screenshot-2026-01-15-at-08-18-41.png" alt="HomeOtter Dashboard" width="500">
   </a>
 </p>
 
 <p align="center">
+  <a href="https://i.postimg.cc/pXhhLw4P/Screenshot-2026-01-15-at-08-21-44.png" target="_blank">
+    <img src="https://i.postimg.cc/pXhhLw4P/Screenshot-2026-01-15-at-08-21-44.png" alt="HomeOtter System Health" width="250">
+  </a>
   <a href="https://i.postimg.cc/4dxnkqpg/Screenshot-2026-01-15-at-08-23-06.png" target="_blank">
-    <img src="https://i.postimg.cc/4dxnkqpg/Screenshot-2026-01-15-at-08-23-06.png" alt="HomeOtter Settings" width="280">
+    <img src="https://i.postimg.cc/4dxnkqpg/Screenshot-2026-01-15-at-08-23-06.png" alt="HomeOtter Settings" width="250">
   </a>
   <a href="https://i.postimg.cc/7PgPtqFL/Screenshot-2026-01-15-at-08-27-46.png" target="_blank">
-    <img src="https://i.postimg.cc/7PgPtqFL/Screenshot-2026-01-15-at-08-27-46.png" alt="HomeOtter Entity Browser" width="280">
+    <img src="https://i.postimg.cc/7PgPtqFL/Screenshot-2026-01-15-at-08-27-46.png" alt="HomeOtter Entity Browser" width="250">
   </a>
 </p>
 
