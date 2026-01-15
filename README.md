@@ -5,7 +5,7 @@
     </td>
     <td>
       <h1>HomeOtter</h1>
-      <p><strong>HomeOtter</strong> is a modern, lightweight macOS menu bar application designed to keep your Home Assistant instance right at your fingertips. Monitor your system's health, track specific sensors live in your menu bar, and receive native notifications | all with a beautiful, native macOS interface.</p>
+      <p><strong>HomeOtter</strong> is a free, open-source <strong>Home Assistant menu bar app for macOS</strong>. Monitor your smart home sensors, track system health, and get native macOS notifications, all from your menu bar. The perfect Home Assistant companion app for Mac users who want quick access to their smart home dashboard without opening a browser.</p>
       <p>💙 <em>If you find HomeOtter useful, consider supporting its development!</em></p>
       <p>
         <a href="https://buymeacoffee.com/snowrabbit500" target="_blank">
