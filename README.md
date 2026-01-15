@@ -8,7 +8,7 @@
 
 -   **🏠 Menu Bar Dashboard**: Quick access to your most important Home Assistant stats without leaving your current app.
 -   **🌡️ Live Menu Bar Stats**: Display any Home Assistant sensor value (temperature, power, solar, etc.) directly in the macOS menu bar.
--   **📉 System Health with Sparklines**: Real-time monitoring of CPU, Memory, and Disk usage with beautiful 1-hour history sparklines.
+-   **📉 System Health Monitoring**: Real-time monitoring of CPU, Memory, and Disk usage with beautiful circular gauges.
 -   **🔔 Native Notifications**: Get macOS alerts when system thresholds are exceeded or when a new Home Assistant Core update is available.
 -   **🌐 Browser Shortcut**: Quickly open your full Home Assistant dashboard in Safari with one click.
 -   **🚀 Launch at Login**: Automatically starts when you turn on your Mac.

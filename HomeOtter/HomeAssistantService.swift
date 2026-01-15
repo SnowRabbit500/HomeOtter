@@ -22,12 +22,6 @@ class HomeAssistantService: ObservableObject {
         }
     }
     
-    // History for Sparklines
-    @Published var cpuHistory: [Double] = []
-    @Published var memoryHistory: [Double] = []
-    @Published var diskHistory: [Double] = []
-    private let maxHistoryPoints = 20
-    
     private var refreshTimer: Timer?
     private var refreshInterval: TimeInterval {
         let saved = UserDefaults.standard.integer(forKey: "refreshInterval")
@@ -237,9 +231,6 @@ class HomeAssistantService: ObservableObject {
             self.connectionStatus = .connected
             self.lastUpdate = Date()
             
-            // Update history for sparklines
-            updateHistory()
-            
             // Check for health status changes and send notifications
             await checkHealthStatusChange()
             
@@ -286,35 +277,6 @@ class HomeAssistantService: ObservableObject {
         }
         
         previousUpdateAvailable = isUpdateAvailable
-    }
-    
-    private func updateHistory() {
-        let cpuId = UserDefaults.standard.string(forKey: "cpuEntityId") ?? ""
-        let memoryId = UserDefaults.standard.string(forKey: "memoryEntityId") ?? ""
-        let diskId = UserDefaults.standard.string(forKey: "diskEntityId") ?? ""
-        
-        if let cpuVal = getSensorValue(entityId: cpuId, type: .cpu) {
-            cpuHistory.append(cpuVal)
-            if cpuHistory.count > maxHistoryPoints { cpuHistory.removeFirst() }
-        }
-        
-        if let memVal = getSensorValue(entityId: memoryId, type: .memory) {
-            memoryHistory.append(memVal)
-            if memoryHistory.count > maxHistoryPoints { memoryHistory.removeFirst() }
-        }
-        
-        if let diskVal = getSensorValue(entityId: diskId, type: .disk) {
-            diskHistory.append(diskVal)
-            if diskHistory.count > maxHistoryPoints { diskHistory.removeFirst() }
-        }
-    }
-    
-    private func getSensorValue(entityId: String, type: SensorType) -> Double? {
-        let state = states.first { $0.entityId == entityId }?.state ?? 
-                    autoDetectSensor(type: type)?.state
-        
-        guard let state = state else { return nil }
-        return Double(state.replacingOccurrences(of: ",", with: "."))
     }
     
     private func getHealthDetails() -> String {

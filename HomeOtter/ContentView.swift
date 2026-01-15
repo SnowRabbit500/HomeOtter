@@ -516,8 +516,7 @@ struct SystemHealthView: View {
                         label: "CPU",
                         value: cpuSensor?.state,
                         unit: cpuSensor?.attributes.unitOfMeasurement ?? "%",
-                        color: gaugeColor(for: cpuSensor?.state),
-                        history: service.cpuHistory
+                        color: gaugeColor(for: cpuSensor?.state)
                     )
                     
                     // Memory
@@ -526,8 +525,7 @@ struct SystemHealthView: View {
                         label: "Memory",
                         value: memorySensor?.state,
                         unit: memorySensor?.attributes.unitOfMeasurement ?? "%",
-                        color: gaugeColor(for: memorySensor?.state),
-                        history: service.memoryHistory
+                        color: gaugeColor(for: memorySensor?.state)
                     )
                     
                     // Disk
@@ -536,8 +534,7 @@ struct SystemHealthView: View {
                         label: "Disk",
                         value: diskSensor?.state,
                         unit: diskSensor?.attributes.unitOfMeasurement ?? "%",
-                        color: gaugeColor(for: diskSensor?.state),
-                        history: service.diskHistory
+                        color: gaugeColor(for: diskSensor?.state)
                     )
                 }
             } else {
@@ -614,7 +611,6 @@ struct HealthGauge: View {
     let value: String?
     let unit: String
     let color: Color
-    let history: [Double]
     
     private var percentage: Double {
         guard let value = value, let percent = Double(value.replacingOccurrences(of: ",", with: ".")) else { return 0 }
@@ -627,16 +623,16 @@ struct HealthGauge: View {
             ZStack {
                 Circle()
                     .stroke(color.opacity(0.15), lineWidth: 3.5)
-                    .frame(width: 40, height: 40)
+                    .frame(width: 44, height: 44)
                 
                 Circle()
                     .trim(from: 0, to: percentage / 100)
                     .stroke(color, style: StrokeStyle(lineWidth: 3.5, lineCap: .round))
-                    .frame(width: 40, height: 40)
+                    .frame(width: 44, height: 44)
                     .rotationEffect(.degrees(-90))
                 
                 Image(systemName: icon)
-                    .font(.system(size: 14))
+                    .font(.system(size: 16))
                     .foregroundStyle(color)
             }
             
@@ -653,45 +649,11 @@ struct HealthGauge: View {
                     .font(.system(size: 9, weight: .medium))
                     .foregroundStyle(.secondary)
             }
-            
-            // Sparkline
-            SparklineView(history: history, color: color)
-                .frame(height: 14)
-                .padding(.top, 2)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
         .background(color.opacity(0.05))
         .clipShape(RoundedRectangle(cornerRadius: 12))
-    }
-}
-
-struct SparklineView: View {
-    let history: [Double]
-    let color: Color
-    
-    var body: some View {
-        GeometryReader { geometry in
-            Path { path in
-                guard history.count > 1 else { return }
-                
-                let stepX = geometry.size.width / CGFloat(history.count - 1)
-                let maxY = 100.0
-                let minY = 0.0
-                
-                for (index, value) in history.enumerated() {
-                    let x = CGFloat(index) * stepX
-                    let y = geometry.size.height * (1.0 - CGFloat((value - minY) / (maxY - minY)))
-                    
-                    if index == 0 {
-                        path.move(to: CGPoint(x: x, y: y))
-                    } else {
-                        path.addLine(to: CGPoint(x: x, y: y))
-                    }
-                }
-            }
-            .stroke(color, style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round))
-        }
     }
 }
 
