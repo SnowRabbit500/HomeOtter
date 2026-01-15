@@ -1,6 +1,6 @@
 # 🦦 HomeOtter
 
-**HomeOtter** is a modern, lightweight macOS menu bar application designed to keep your Home Assistant instance right at your fingertips. Monitor your system's health, track specific sensors live in your menu bar, and receive native notifications—all with a beautiful, native macOS interface.
+**HomeOtter** is a modern, lightweight macOS menu bar application designed to keep your Home Assistant instance right at your fingertips. Monitor your system's health, track specific sensors live in your menu bar, and receive native notifications all with a beautiful, native macOS interface.
 
 ## 📸 Screenshots
 
@@ -49,6 +49,24 @@
 4.  Paste your **Long-Lived Access Token**.
 5.  Click **Test Connection** to verify.
 6.  (Optional) Configure your System Health entities and Menu Bar sensor.
+
+## 📊 Setting Up System Monitor (Required for System Health)
+
+To display CPU, Memory, and Disk usage in HomeOtter, you need to enable the **System Monitor** integration in Home Assistant:
+
+1.  Go to **Settings** → **Devices & Services** in Home Assistant.
+2.  Click **+ Add Integration** (bottom right).
+3.  Search for **"System Monitor"** and select it.
+4.  Choose which sensors you want to monitor:
+    -   ✅ **Processor use** (CPU usage)
+    -   ✅ **Memory use** (RAM usage)  
+    -   ✅ **Disk use** (Storage usage)
+5.  Click **Submit** to create the integration.
+6.  The sensors will now appear as entities (e.g., `sensor.processor_use`, `sensor.memory_use`, `sensor.disk_use`).
+
+> 💡 **Tip**: After adding System Monitor, go to HomeOtter Settings and select the correct entities for CPU, Memory, and Disk in the **System Health Entities** section.
+
+For more details, see the [System Monitor documentation](https://www.home-assistant.io/integrations/systemmonitor/).
 
 ## 🛠️ Built With
 
