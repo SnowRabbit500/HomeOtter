@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://i.postimg.cc/rsBnZgJ1/30821011-D686-40C5-8EFD-FE7D01560252.png" alt="HomeOtter Logo" width="300">
+</p>
+
 # 🦦 HomeOtter
 
 **HomeOtter** is a modern, lightweight macOS menu bar application designed to keep your Home Assistant instance right at your fingertips. Monitor your system's health, track specific sensors live in your menu bar, and receive native notifications all with a beautiful, native macOS interface.
