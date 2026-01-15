@@ -76,17 +76,6 @@ To display CPU, Memory, and Disk usage in HomeOtter, you need to enable the **Sy
 
 For more details, see the [System Monitor documentation](https://www.home-assistant.io/integrations/systemmonitor/).
 
-## 🛠️ Built With
-
--   **SwiftUI**: For the modern, native user interface.
--   **Combine**: For reactive data handling and timers.
--   **Home Assistant REST API**: For seamless integration with your smart home.
--   **UserNotifications**: For native macOS system alerts.
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request or open an issue for any bugs or feature requests.
-
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
