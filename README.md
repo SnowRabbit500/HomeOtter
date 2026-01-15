@@ -6,6 +6,7 @@
     <td>
       <h1>HomeOtter</h1>
       <p><strong>HomeOtter</strong> is a modern, lightweight macOS menu bar application designed to keep your Home Assistant instance right at your fingertips. Monitor your system's health, track specific sensors live in your menu bar, and receive native notifications | all with a beautiful, native macOS interface.</p>
+      <p>☕ <strong>Enjoying HomeOtter?</strong> <a href="https://buymeacoffee.com/snowrabbit500">Buy me a coffee!</a></p>
     </td>
   </tr>
 </table>
