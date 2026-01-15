@@ -5,15 +5,13 @@
 ## 📸 Screenshots
 
 <p align="center">
-  <img src="https://i.postimg.cc/9XB1B7QM/Screenshot-2026-01-15-at-08-18-41.png" alt="HomeOtter Dashboard" width="400">
+  <img src="https://i.postimg.cc/9XB1B7QM/Screenshot-2026-01-15-at-08-18-41.png" alt="HomeOtter Dashboard" width="350">
+  <img src="https://i.postimg.cc/pXhhLw4P/Screenshot-2026-01-15-at-08-21-44.png" alt="HomeOtter System Health" width="350">
 </p>
 
-<!-- Add more screenshots here:
 <p align="center">
-  <img src="YOUR_URL_HERE" alt="Description" width="400">
-  <img src="YOUR_URL_HERE" alt="Description" width="400">
+  <img src="https://i.postimg.cc/4dxnkqpg/Screenshot-2026-01-15-at-08-23-06.png" alt="HomeOtter Settings" width="350">
 </p>
--->
 
 ## ✨ Features
 
