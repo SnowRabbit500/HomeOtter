@@ -54,32 +54,22 @@ struct HeaderView: View {
     
     var body: some View {
         HStack(spacing: 14) {
-            // Modern Logo and Title
-            HStack(spacing: 10) {
-                ZStack {
-                    Circle()
-                        .fill(LinearGradient(colors: [.blue.opacity(0.15), .blue.opacity(0.05)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                        .frame(width: 36, height: 36)
-                    
-                    Text("🦦")
-                        .font(.system(size: 20))
-                }
-                .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+            // Clean branding - matching Settings style
+            VStack(alignment: .leading, spacing: 2) {
+                Text("HomeOtter")
+                    .font(.system(size: 20, weight: .heavy, design: .rounded))
+                    .foregroundStyle(
+                        LinearGradient(colors: [.cyan, .blue], startPoint: .leading, endPoint: .trailing)
+                    )
                 
-                VStack(alignment: .leading, spacing: 1) {
-                    Text("HomeOtter")
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
-                        .lineLimit(1)
+                HStack(spacing: 5) {
+                    ConnectionIndicator(status: service.connectionStatus)
                     
-                    HStack(spacing: 5) {
-                        ConnectionIndicator(status: service.connectionStatus)
-                        
-                        if let config = service.config {
-                            Text(config.locationName)
-                                .font(.system(size: 10, weight: .medium))
-                                .foregroundStyle(.secondary)
-                                .lineLimit(1)
-                        }
+                    if let config = service.config {
+                        Text(config.locationName)
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
                     }
                 }
             }
@@ -295,7 +285,7 @@ struct MainDashboardView: View {
             }
             .padding()
         }
-        .frame(minHeight: 400, maxHeight: 650)
+        .frame(minHeight: 480, maxHeight: 650)
     }
 }
 
@@ -497,19 +487,26 @@ struct SystemHealthView: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 12) {
+            // Header - iStats style
             HStack {
-                Image(systemName: overallStatus.icon)
+                Text("SYSTEM HEALTH")
+                    .font(.system(size: 10, weight: .bold, design: .rounded))
                     .foregroundStyle(overallStatusColor)
-                Text("System Health")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .tracking(1.5)
                 
                 Spacer()
+                
+                // Status indicator dot
+                Circle()
+                    .fill(overallStatusColor)
+                    .frame(width: 6, height: 6)
+                    .shadow(color: overallStatusColor.opacity(0.5), radius: 3)
             }
             
             if hasAnySensor {
-                HStack(spacing: 8) {
+                // Gauges row - iStats style
+                HStack(spacing: 12) {
                     // CPU
                     HealthGauge(
                         icon: "cpu",
@@ -537,40 +534,29 @@ struct SystemHealthView: View {
                         color: gaugeColor(for: diskSensor?.state)
                     )
                 }
+                .padding(.vertical, 8)
             } else {
-                // No sensors found - show setup hint
-                VStack(spacing: 8) {
-                    HStack {
-                        Image(systemName: "gear.badge")
-                            .foregroundStyle(.secondary)
-                        Text("Configure sensors in Settings")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    Text("Click ⚙️ → System Health Entities")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                // No sensors - compact hint
+                HStack {
+                    Image(systemName: "gear")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                    Text("Configure in Settings")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
                 }
-                .padding(.vertical, 4)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
             }
         }
-        .padding()
+        .padding(14)
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            overallStatusColor.opacity(0.12),
-                            overallStatusColor.opacity(0.05)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.5))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(overallStatusColor.opacity(0.3), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(overallStatusColor.opacity(0.2), lineWidth: 1)
         )
     }
     
@@ -604,7 +590,7 @@ struct SystemHealthView: View {
 // Removed: Moved to Models.swift
 
 
-// MARK: - Health Gauge
+// MARK: - Health Gauge (iStats Style)
 struct HealthGauge: View {
     let icon: String
     let label: String
@@ -617,43 +603,53 @@ struct HealthGauge: View {
         return min(max(percent, 0), 100)
     }
     
+    private var displayValue: String {
+        guard let value = value else { return "--" }
+        // Try to format as integer if it's a whole number
+        if let doubleVal = Double(value.replacingOccurrences(of: ",", with: ".")),
+           doubleVal == floor(doubleVal) {
+            return "\(Int(doubleVal))"
+        }
+        return value
+    }
+    
     var body: some View {
-        VStack(spacing: 6) {
-            // Circular gauge
+        VStack(spacing: 8) {
+            // iStats-style circular gauge with percentage inside
             ZStack {
+                // Background ring
                 Circle()
-                    .stroke(color.opacity(0.15), lineWidth: 3.5)
-                    .frame(width: 44, height: 44)
+                    .stroke(color.opacity(0.2), lineWidth: 6)
+                    .frame(width: 56, height: 56)
                 
+                // Progress ring
                 Circle()
                     .trim(from: 0, to: percentage / 100)
-                    .stroke(color, style: StrokeStyle(lineWidth: 3.5, lineCap: .round))
-                    .frame(width: 44, height: 44)
+                    .stroke(
+                        color,
+                        style: StrokeStyle(lineWidth: 6, lineCap: .round)
+                    )
+                    .frame(width: 56, height: 56)
                     .rotationEffect(.degrees(-90))
+                    .animation(.easeInOut(duration: 0.5), value: percentage)
                 
-                Image(systemName: icon)
-                    .font(.system(size: 16))
-                    .foregroundStyle(color)
+                // Percentage text inside
+                VStack(spacing: -2) {
+                    Text(displayValue)
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundStyle(.primary)
+                    Text(unit)
+                        .font(.system(size: 8, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
             }
             
-            VStack(spacing: 2) {
-                if let value = value {
-                    Text("\(value)\(unit)")
-                        .font(.system(.caption, design: .rounded, weight: .bold))
-                        .foregroundStyle(color)
-                } else {
-                    Text("--").font(.system(.caption, design: .rounded, weight: .bold)).foregroundStyle(.secondary)
-                }
-                
-                Text(label)
-                    .font(.system(size: 9, weight: .medium))
-                    .foregroundStyle(.secondary)
-            }
+            // Label below
+            Text(label)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
-        .background(color.opacity(0.05))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
 
@@ -772,7 +768,7 @@ struct EntityCard: View {
     }
 }
 
-// MARK: - Quick Stats
+// MARK: - Quick Stats (Dashboard Style)
 struct QuickStatsView: View {
     @ObservedObject var service: HomeAssistantService
     
@@ -780,8 +776,16 @@ struct QuickStatsView: View {
         service.states.filter { $0.entityId.hasPrefix("light.") && $0.state == "on" }.count
     }
     
+    private var totalLights: Int {
+        service.states.filter { $0.entityId.hasPrefix("light.") }.count
+    }
+    
     private var switchesOn: Int {
         service.states.filter { $0.entityId.hasPrefix("switch.") && $0.state == "on" }.count
+    }
+    
+    private var totalSwitches: Int {
+        service.states.filter { $0.entityId.hasPrefix("switch.") }.count
     }
     
     private var updatesAvailable: Int {
@@ -792,51 +796,133 @@ struct QuickStatsView: View {
         service.states.filter { $0.entityId.hasPrefix("person.") && $0.state == "home" }.count
     }
     
+    private var totalPersons: Int {
+        service.states.filter { $0.entityId.hasPrefix("person.") }.count
+    }
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Quick Stats")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 12) {
+            // Header
+            HStack {
+                Text("DASHBOARD")
+                    .font(.system(size: 10, weight: .bold, design: .rounded))
+                    .foregroundStyle(.cyan)
+                    .tracking(1.5)
+                
+                Spacer()
+                
+                // Total entities indicator
+                Text("\(service.states.count) entities")
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
             
-            HStack(spacing: 16) {
-                StatBadge(icon: "lightbulb.fill", value: "\(lightsOn)", label: "Lights", color: .yellow)
-                StatBadge(icon: "power", value: "\(switchesOn)", label: "Switches", color: .green)
-                StatBadge(icon: "arrow.down.circle", value: "\(updatesAvailable)", label: "Updates", color: updatesAvailable > 0 ? .orange : .secondary)
-                StatBadge(icon: "person.fill", value: "\(personsHome)", label: "Home", color: .blue)
+            // Stats Grid
+            HStack(spacing: 10) {
+                DashboardGauge(
+                    icon: "lightbulb.fill",
+                    value: lightsOn,
+                    total: totalLights,
+                    label: "Lights",
+                    color: .yellow,
+                    isActive: lightsOn > 0
+                )
+                
+                DashboardGauge(
+                    icon: "power",
+                    value: switchesOn,
+                    total: totalSwitches,
+                    label: "Switches",
+                    color: .green,
+                    isActive: switchesOn > 0
+                )
+                
+                DashboardGauge(
+                    icon: "arrow.down.circle.fill",
+                    value: updatesAvailable,
+                    total: nil,
+                    label: "Updates",
+                    color: updatesAvailable > 0 ? .orange : .secondary,
+                    isActive: updatesAvailable > 0
+                )
+                
+                DashboardGauge(
+                    icon: "person.fill",
+                    value: personsHome,
+                    total: totalPersons,
+                    label: "Home",
+                    color: .cyan,
+                    isActive: personsHome > 0
+                )
             }
         }
-        .padding()
+        .padding(14)
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(.thinMaterial)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(Color.cyan.opacity(0.15), lineWidth: 1)
         )
     }
 }
 
-struct StatBadge: View {
+// Dashboard Gauge with circular progress
+struct DashboardGauge: View {
     let icon: String
-    let value: String
+    let value: Int
+    let total: Int?
     let label: String
     let color: Color
+    let isActive: Bool
+    
+    private var progress: Double {
+        guard let total = total, total > 0 else { return isActive ? 1.0 : 0.0 }
+        return Double(value) / Double(total)
+    }
     
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 8) {
+            // Circular gauge with icon
             ZStack {
+                // Background ring
                 Circle()
-                    .fill(color.opacity(0.15))
-                    .frame(width: 36, height: 36)
+                    .stroke(color.opacity(0.2), lineWidth: 5)
+                    .frame(width: 52, height: 52)
                 
+                // Progress ring
+                Circle()
+                    .trim(from: 0, to: progress)
+                    .stroke(
+                        color,
+                        style: StrokeStyle(lineWidth: 5, lineCap: .round)
+                    )
+                    .frame(width: 52, height: 52)
+                    .rotationEffect(.degrees(-90))
+                    .animation(.spring(response: 0.6, dampingFraction: 0.8), value: progress)
+                
+                // Icon with glow effect when active
                 Image(systemName: icon)
-                    .font(.system(size: 16))
+                    .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(color)
+                    .shadow(color: isActive ? color.opacity(0.6) : .clear, radius: isActive ? 8 : 0)
             }
             
-            Text(value)
-                .font(.system(.title3, design: .rounded, weight: .bold))
-            
-            Text(label)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+            // Value
+            VStack(spacing: 2) {
+                if let total = total {
+                    Text("\(value)/\(total)")
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                } else {
+                    Text("\(value)")
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                }
+                
+                Text(label)
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
         }
         .frame(maxWidth: .infinity)
     }

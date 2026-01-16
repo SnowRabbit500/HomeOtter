@@ -15,14 +15,14 @@ struct HomeOtterApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
     var body: some Scene {
-        // Menu Bar Extra (the main interface)
+        // Menu Bar Extra
         MenuBarExtra {
             ContentView(service: service, openSettings: { openWindow(id: "settings") }, openEntityBrowser: { openWindow(id: "entities") })
                 .onAppear {
                     applyStoredAppearance()
                 }
         } label: {
-            MenuBarLabel(service: service)
+            MenuBarView(service: service)
         }
         .menuBarExtraStyle(.window)
         
@@ -65,44 +65,42 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
-// MARK: - Menu Bar Label
-struct MenuBarLabel: View {
+// MARK: - Menu Bar View (simplified)
+struct MenuBarView: View {
     @ObservedObject var service: HomeAssistantService
     
     var body: some View {
+        // HStack with Image + Text for menu bar
         HStack(spacing: 4) {
             Image(systemName: "house.fill")
-            
-            if !service.menuBarEntityId.isEmpty, let state = menuBarState {
-                Text(state.displayState)
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-            }
-            
-            Text(statusEmoji)
-                .font(.system(size: 10))
+            Text(menuBarText)
         }
     }
     
-    private var menuBarState: HAEntityState? {
-        service.states.first { $0.entityId == service.menuBarEntityId }
-    }
-    
-    private var isUpdateAvailable: Bool {
-        service.states.first { $0.entityId == "update.home_assistant_core_update" }?.state == "on"
+    private var menuBarText: String {
+        var parts: [String] = []
+        
+        // Status emoji
+        parts.append(statusEmoji)
+        
+        // Sensor values
+        let sensorValues = service.menuBarSensorIds.compactMap { id in
+            service.states.first(where: { $0.entityId == id })?.displayState
+        }
+        if !sensorValues.isEmpty {
+            parts.append(sensorValues.joined(separator: " │ "))
+        }
+        
+        return parts.joined(separator: " ")
     }
     
     private var statusEmoji: String {
-        // Update available takes priority - show blue
-        if isUpdateAvailable {
+        if service.states.first(where: { $0.entityId == "update.home_assistant_core_update" })?.state == "on" {
             return "🔵"
         }
-        
-        // Connection error - show red
         if case .error = service.connectionStatus {
             return "🔴"
         }
-        
-        // System health status
         switch service.overallHealth {
         case .healthy: return "🟢"
         case .warning: return "🟠"
@@ -110,5 +108,6 @@ struct MenuBarLabel: View {
         case .unknown: return "⚪"
         }
     }
+    
 }
 

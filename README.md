@@ -19,27 +19,27 @@
 ## 📸 Screenshots
 
 <p align="center">
-  <a href="https://i.postimg.cc/9XB1B7QM/Screenshot-2026-01-15-at-08-18-41.png" target="_blank">
-    <img src="https://i.postimg.cc/9XB1B7QM/Screenshot-2026-01-15-at-08-18-41.png" alt="HomeOtter Dashboard" width="500">
+  <a href="https://i.postimg.cc/yYH36Svw/Screenshot_2026_01_16_at_11_19_48.png" target="_blank">
+    <img src="https://i.postimg.cc/yYH36Svw/Screenshot_2026_01_16_at_11_19_48.png" alt="HomeOtter Dashboard" width="500">
   </a>
 </p>
 
 <p align="center">
-  <a href="https://i.postimg.cc/pXhhLw4P/Screenshot-2026-01-15-at-08-21-44.png" target="_blank">
-    <img src="https://i.postimg.cc/pXhhLw4P/Screenshot-2026-01-15-at-08-21-44.png" alt="HomeOtter System Health" width="250">
+  <a href="https://i.postimg.cc/dtYZQT4b/Screenshot_2026_01_16_at_11_20_59.png" target="_blank">
+    <img src="https://i.postimg.cc/dtYZQT4b/Screenshot_2026_01_16_at_11_20_59.png" alt="HomeOtter System Health" width="250">
   </a>
-  <a href="https://i.postimg.cc/4dxnkqpg/Screenshot-2026-01-15-at-08-23-06.png" target="_blank">
-    <img src="https://i.postimg.cc/4dxnkqpg/Screenshot-2026-01-15-at-08-23-06.png" alt="HomeOtter Settings" width="250">
+  <a href="https://i.postimg.cc/zXrHDR06/Screenshot_2026_01_16_at_11_21_23.png" target="_blank">
+    <img src="https://i.postimg.cc/zXrHDR06/Screenshot_2026_01_16_at_11_21_23.png" alt="HomeOtter Settings" width="250">
   </a>
-  <a href="https://i.postimg.cc/7PgPtqFL/Screenshot-2026-01-15-at-08-27-46.png" target="_blank">
-    <img src="https://i.postimg.cc/7PgPtqFL/Screenshot-2026-01-15-at-08-27-46.png" alt="HomeOtter Entity Browser" width="250">
+  <a href="https://i.postimg.cc/WbvqpJXW/Screenshot_2026_01_16_at_11_22_08.png" target="_blank">
+    <img src="https://i.postimg.cc/WbvqpJXW/Screenshot_2026_01_16_at_11_22_08.png" alt="HomeOtter Entity Browser" width="250">
   </a>
 </p>
 
 ## ✨ Features
 
 -   **🏠 Menu Bar Dashboard**: Quick access to your most important Home Assistant stats without leaving your current app.
--   **🌡️ Live Menu Bar Stats**: Display any Home Assistant sensor value (temperature, power, solar, etc.) directly in the macOS menu bar.
+-   **🌡️ Live Menu Bar Stats**: Display up to 6 Home Assistant sensor values (temperature, power, solar, etc.) directly in the macOS menu bar.
 -   **📉 System Health Monitoring**: Real-time monitoring of CPU, Memory, and Disk usage with beautiful circular gauges.
 -   **🔔 Native Notifications**: Get macOS alerts when system thresholds are exceeded or when a new Home Assistant Core update is available.
 -   **🌐 Browser Shortcut**: Quickly open your full Home Assistant dashboard in Safari with one click.
@@ -63,6 +63,12 @@
 4.  Paste your **Long-Lived Access Token**.
 5.  Click **Test Connection** to verify.
 6.  (Optional) Configure your System Health entities and Menu Bar sensor.
+
+> ⚠️ **URL Tips**:
+> - **Do NOT include a trailing slash** at the end of your URL
+>   - ✅ Correct: `https://your-ha.ui.nabu.casa`
+>   - ❌ Wrong: `https://your-ha.ui.nabu.casa/`
+> - Use the full URL including `https://`
 
 ## 📊 Setting Up System Monitor (Required for System Health)
 

@@ -31,7 +31,7 @@ struct SettingsView: View {
     @State private var cpuEntityId: String = ""
     @State private var memoryEntityId: String = ""
     @State private var diskEntityId: String = ""
-    @State private var menuBarEntityId: String = ""
+    @State private var menuBarEntityIds: [String] = []
     @State private var showEntityPicker: EntityPickerType?
     
     enum EntityPickerType: Identifiable {
@@ -51,7 +51,7 @@ struct SettingsView: View {
             Divider()
             mainContent
         }
-        .frame(width: 420, height: 850)
+        .frame(width: 400, height: 580)
         .background(viewBackground)
         .onAppear(perform: loadSettings)
         .modifier(SettingsLogicModifier(
@@ -62,7 +62,7 @@ struct SettingsView: View {
             cpuEntityId: $cpuEntityId,
             memoryEntityId: $memoryEntityId,
             diskEntityId: $diskEntityId,
-            menuBarEntityId: $menuBarEntityId,
+            menuBarEntityIds: $menuBarEntityIds,
             launchAtLogin: $launchAtLogin,
             notificationsEnabled: $notificationsEnabled,
             service: service,
@@ -73,35 +73,47 @@ struct SettingsView: View {
     
     // MARK: - Subviews
     
+    // iStats-style dark gradient background
     private var viewBackground: some View {
-        ZStack {
-            Color(nsColor: .windowBackgroundColor).opacity(0.9)
-            Rectangle().fill(.thickMaterial)
-        }
+        LinearGradient(
+            colors: [
+                Color(red: 0.12, green: 0.13, blue: 0.20),
+                Color(red: 0.08, green: 0.09, blue: 0.14)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
     }
     
     private var header: some View {
-        HStack(spacing: 12) {
-            ZStack {
-                Circle().fill(Color.orange.opacity(0.15)).frame(width: 40, height: 40)
-                Image(systemName: "gearshape.fill").font(.title3).foregroundStyle(.orange)
-            }
-            VStack(alignment: .leading, spacing: 0) {
-                Text("Settings").font(.headline)
-                Text("Configuration & Preferences").font(.caption).foregroundStyle(.secondary)
+        HStack(spacing: 0) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("HomeOtter")
+                    .font(.system(size: 22, weight: .heavy, design: .rounded))
+                    .foregroundStyle(
+                        LinearGradient(colors: [.cyan, .blue], startPoint: .leading, endPoint: .trailing)
+                    )
+                Text("Settings")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.4))
+                    .tracking(2)
+                    .textCase(.uppercase)
             }
             Spacer()
             Button { dismiss() } label: {
-                Image(systemName: "xmark.circle.fill").font(.title2).foregroundStyle(.secondary)
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 20))
+                    .foregroundStyle(.white.opacity(0.3))
             }.buttonStyle(.plain)
         }
-        .padding()
-        .background(.ultraThinMaterial)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 18)
+        .background(Color.white.opacity(0.03))
     }
     
     private var mainContent: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 12) {
                 connectionSection
                 menuBarSection
                 systemHealthSection
@@ -110,56 +122,145 @@ struct SettingsView: View {
                 infoSection
                 aboutSection
             }
-            .padding()
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
         }
     }
     
     private var menuBarSection: some View {
-        SettingsSection(title: "Menu Bar Display", icon: "menubar.rectangle", color: .blue) {
+        SettingsSection(title: "Menu Bar Display", icon: "menubar.rectangle", color: .white.opacity(0.6), isExpandedByDefault: false) {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Show a specific sensor value directly in your macOS menu bar.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                HStack {
+                    Text("Show sensor values in your menu bar")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.white.opacity(0.5))
+                    Spacer()
+                    Text("\(menuBarEntityIds.count)/\(HomeAssistantService.maxMenuBarSensors)")
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .foregroundStyle(.cyan)
+                }
                 
-                EntitySelectorRow(icon: "chart.bar.fill", label: "Menu Bar Sensor", entityId: $menuBarEntityId, color: .blue) {
-                    showEntityPicker = .menuBar
+                // List of current menu bar sensors
+                if !menuBarEntityIds.isEmpty {
+                    VStack(spacing: 6) {
+                        ForEach(Array(menuBarEntityIds.enumerated()), id: \.offset) { index, entityId in
+                            MenuBarSensorRow(
+                                index: index,
+                                entityId: entityId,
+                                service: service,
+                                onRemove: {
+                                    menuBarEntityIds.removeAll { $0 == entityId }
+                                    service.menuBarEntityIds = menuBarEntityIds
+                                },
+                                onMoveUp: index > 0 ? {
+                                    menuBarEntityIds.swapAt(index, index - 1)
+                                    service.menuBarEntityIds = menuBarEntityIds
+                                } : nil,
+                                onMoveDown: index < menuBarEntityIds.count - 1 ? {
+                                    menuBarEntityIds.swapAt(index, index + 1)
+                                    service.menuBarEntityIds = menuBarEntityIds
+                                } : nil
+                            )
+                        }
+                    }
+                }
+                
+                // Add button
+                if menuBarEntityIds.count < HomeAssistantService.maxMenuBarSensors {
+                    Button {
+                        showEntityPicker = .menuBar
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "plus")
+                                .font(.system(size: 10, weight: .bold))
+                            Text("Add Sensor")
+                                .font(.system(size: 11, weight: .medium))
+                        }
+                        .foregroundStyle(.cyan)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(Color.cyan.opacity(0.15))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }
     }
 
+    // Connection section: open if not connected, closed if connected
     private var connectionSection: some View {
-        SettingsSection(title: "Connection", icon: "network", color: .blue) {
+        SettingsSection(title: "Connection", icon: "network", color: .white.opacity(0.6), isExpandedByDefault: !service.isConfigured || service.connectionStatus != .connected) {
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Home Assistant URL").font(.subheadline).foregroundStyle(.secondary)
+                    Text("Home Assistant URL")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.5))
                     TextField("https://your-ha-instance.ui.nabu.casa", text: $urlText)
-                        .textFieldStyle(.roundedBorder).font(.system(.body, design: .monospaced))
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 13, design: .monospaced))
+                        .foregroundStyle(.white)
+                        .padding(10)
+                        .background(Color.white.opacity(0.08))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Long-Lived Access Token").font(.subheadline).foregroundStyle(.secondary)
+                    Text("Long-Lived Access Token")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.5))
                     HStack(spacing: 8) {
                         if showToken {
                             TextField("Paste your token here", text: $tokenText)
-                                .textFieldStyle(.roundedBorder).font(.system(.caption, design: .monospaced))
+                                .textFieldStyle(.plain)
+                                .font(.system(size: 11, design: .monospaced))
+                                .foregroundStyle(.white)
                         } else {
-                            SecureField("Paste your token here", text: $tokenText).textFieldStyle(.roundedBorder)
+                            SecureField("Paste your token here", text: $tokenText)
+                                .textFieldStyle(.plain)
+                                .foregroundStyle(.white)
                         }
                         Button { showToken.toggle() } label: {
-                            Image(systemName: showToken ? "eye.slash" : "eye").foregroundStyle(.secondary)
-                        }.buttonStyle(.borderless)
+                            Image(systemName: showToken ? "eye.slash" : "eye")
+                                .foregroundStyle(.white.opacity(0.4))
+                        }.buttonStyle(.plain)
                     }
+                    .padding(10)
+                    .background(Color.white.opacity(0.08))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
                 HStack(spacing: 12) {
                     Button(action: testConnection) {
-                        HStack {
-                            if isTesting { ProgressView().controlSize(.small) }
-                            else { Image(systemName: "antenna.radiowaves.left.and.right") }
-                            Text("Test Connection")
-                        }.frame(maxWidth: .infinity)
-                    }.buttonStyle(.bordered)
-                    Button("Save & Close") { saveSettings() }
-                        .buttonStyle(.borderedProminent).tint(.blue)
+                        HStack(spacing: 6) {
+                            if isTesting { 
+                                ProgressView()
+                                    .controlSize(.small)
+                                    .tint(.cyan)
+                            } else { 
+                                Image(systemName: "antenna.radiowaves.left.and.right")
+                            }
+                            Text("Test")
+                        }
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.6))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(Color.white.opacity(0.05))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }.buttonStyle(.plain)
+                    
+                    Button { saveSettings() } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 10, weight: .bold))
+                            Text("Save & Close")
+                                .font(.system(size: 11, weight: .medium))
+                        }
+                        .foregroundStyle(.cyan)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(Color.cyan.opacity(0.15))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }.buttonStyle(.plain)
                 }
                 if let result = testResult { TestResultView(result: result) }
             }
@@ -167,21 +268,21 @@ struct SettingsView: View {
     }
     
     private var systemHealthSection: some View {
-        SettingsSection(title: "System Health Entities", icon: "heart.text.clipboard", color: .pink) {
-            VStack(alignment: .leading, spacing: 12) {
-                EntitySelectorRow(icon: "cpu", label: "CPU", entityId: $cpuEntityId, color: .green) { showEntityPicker = .cpu }
-                EntitySelectorRow(icon: "memorychip", label: "Memory", entityId: $memoryEntityId, color: .blue) { showEntityPicker = .memory }
-                EntitySelectorRow(icon: "internaldrive", label: "Disk", entityId: $diskEntityId, color: .orange) { showEntityPicker = .disk }
+        SettingsSection(title: "System Health", icon: "heart.text.clipboard", color: .white.opacity(0.6), isExpandedByDefault: false) {
+            VStack(alignment: .leading, spacing: 8) {
+                EntitySelectorRow(icon: "cpu", label: "CPU", entityId: $cpuEntityId, color: .cyan) { showEntityPicker = .cpu }
+                EntitySelectorRow(icon: "memorychip", label: "Memory", entityId: $memoryEntityId, color: .cyan) { showEntityPicker = .memory }
+                EntitySelectorRow(icon: "internaldrive", label: "Disk", entityId: $diskEntityId, color: .cyan) { showEntityPicker = .disk }
             }
         }
     }
     
     private var alertThresholdsSection: some View {
-        SettingsSection(title: "Alert Thresholds", icon: "bell.badge", color: .orange) {
+        SettingsSection(title: "Thresholds", icon: "bell.badge", color: .white.opacity(0.6), isExpandedByDefault: false) {
             VStack(alignment: .leading, spacing: 16) {
                 ThresholdSlider(title: "Warning", value: $warningThreshold, color: .orange, range: 0...99)
                 ThresholdSlider(title: "Critical", value: $criticalThreshold, color: .red, range: 0...99)
-                HStack(spacing: 20) {
+                HStack(spacing: 12) {
                     ThresholdPreview(label: "Healthy", range: "0-\(Int(warningThreshold))%", color: .green)
                     ThresholdPreview(label: "Warning", range: "\(Int(warningThreshold))-\(Int(criticalThreshold))%", color: .orange)
                     ThresholdPreview(label: "Critical", range: ">\(Int(criticalThreshold))%", color: .red)
@@ -191,40 +292,65 @@ struct SettingsView: View {
     }
     
     private var appearanceSection: some View {
-        SettingsSection(title: "General Settings", icon: "paintpalette", color: .purple) {
-            VStack(alignment: .leading, spacing: 16) {
+        SettingsSection(title: "Preferences", icon: "paintpalette", color: .white.opacity(0.6), isExpandedByDefault: false) {
+            VStack(alignment: .leading, spacing: 14) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Theme").font(.subheadline).foregroundStyle(.secondary)
+                    Text("THEME")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.4))
+                        .tracking(1)
                     Picker("Theme", selection: $appearanceMode) {
                         ForEach(AppearanceMode.allCases) { mode in
-                            Label(mode.label, systemImage: mode.icon).tag(mode)
+                            Text(mode.label).tag(mode)
                         }
-                    }.pickerStyle(.segmented)
+                    }
+                    .pickerStyle(.segmented)
+                    .tint(.cyan)
                 }
-                Divider()
-                Toggle("Launch HomeOtter at login", isOn: $launchAtLogin)
-                    .toggleStyle(.switch).font(.subheadline)
-                Divider()
-                Toggle("Enable notifications", isOn: $notificationsEnabled)
-                    .toggleStyle(.switch).font(.subheadline)
-                Text("Get notified when thresholds are exceeded or HA updates are available")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                Divider()
+                
+                Divider().background(Color.white.opacity(0.1))
+                
+                HStack {
+                    Text("Launch at login")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.white.opacity(0.8))
+                    Spacer()
+                    Toggle("", isOn: $launchAtLogin)
+                        .toggleStyle(.switch)
+                        .tint(.cyan)
+                }
+                
+                HStack {
+                    Text("Notifications")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.white.opacity(0.8))
+                    Spacer()
+                    Toggle("", isOn: $notificationsEnabled)
+                        .toggleStyle(.switch)
+                        .tint(.cyan)
+                }
+                
+                Divider().background(Color.white.opacity(0.1))
+                
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Text("Refresh Interval")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.white.opacity(0.8))
                         Spacer()
-                        Text("\(Int(refreshInterval))s").monospaced().foregroundStyle(.purple)
+                        Text("\(Int(refreshInterval))s")
+                            .font(.system(size: 12, weight: .bold, design: .monospaced))
+                            .foregroundStyle(.cyan)
                     }
-                    Slider(value: $refreshInterval, in: 10...120, step: 10).tint(.purple)
+                    Slider(value: $refreshInterval, in: 10...120, step: 10)
+                        .tint(.cyan)
                 }
             }
         }
     }
     
     private var infoSection: some View {
-        SettingsSection(title: "Home Assistant Info", icon: "house.fill", color: .cyan) {
+        SettingsSection(title: "Home Assistant", icon: "house.fill", color: .white.opacity(0.6), isExpandedByDefault: false) {
             VStack(alignment: .leading, spacing: 8) {
                 if let config = service.config {
                     InfoRow(label: "Location", value: config.locationName)
@@ -232,21 +358,33 @@ struct SettingsView: View {
                     InfoRow(label: "State", value: config.state)
                     InfoRow(label: "Timezone", value: config.timeZone)
                 } else {
-                    Text("Connect to see Home Assistant info").font(.caption).foregroundStyle(.secondary)
+                    Text("Connect to see info")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.white.opacity(0.4))
                 }
             }
         }
     }
     
     private var aboutSection: some View {
-        SettingsSection(title: "About", icon: "info.circle", color: .gray) {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("HomeOtter").font(.headline)
-                    Spacer()
-                    Text("v1.0").foregroundStyle(.secondary)
+        SettingsSection(title: "About", icon: "info.circle", color: .white.opacity(0.6), isExpandedByDefault: false) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("HomeOtter")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.9))
+                    Text("A menu bar companion for Home Assistant")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.white.opacity(0.4))
                 }
-                Text("A menu bar companion for Home Assistant").font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                Text("v1.0")
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.3))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.white.opacity(0.05))
+                    .clipShape(RoundedRectangle(cornerRadius: 4))
             }
         }
     }
@@ -257,12 +395,17 @@ struct SettingsView: View {
         EntityPickerSheet(
             service: service,
             pickerType: pickerType,
+            excludedEntityIds: pickerType == .menuBar ? menuBarEntityIds : [],
             onSelect: { entityId in
                 switch pickerType {
                 case .cpu: cpuEntityId = entityId
                 case .memory: memoryEntityId = entityId
                 case .disk: diskEntityId = entityId
-                case .menuBar: menuBarEntityId = entityId
+                case .menuBar:
+                    if !menuBarEntityIds.contains(entityId) && menuBarEntityIds.count < HomeAssistantService.maxMenuBarSensors {
+                        menuBarEntityIds.append(entityId)
+                        service.menuBarEntityIds = menuBarEntityIds
+                    }
                 }
                 showEntityPicker = nil
             }
@@ -282,7 +425,7 @@ struct SettingsView: View {
         cpuEntityId = UserDefaults.standard.string(forKey: "cpuEntityId") ?? ""
         memoryEntityId = UserDefaults.standard.string(forKey: "memoryEntityId") ?? ""
         diskEntityId = UserDefaults.standard.string(forKey: "diskEntityId") ?? ""
-        menuBarEntityId = service.menuBarEntityId
+        menuBarEntityIds = service.menuBarEntityIds
         launchAtLogin = service.launchAtLogin
         notificationsEnabled = UserDefaults.standard.bool(forKey: "notificationsEnabled")
     }
@@ -362,7 +505,7 @@ struct SettingsLogicModifier: ViewModifier {
     @Binding var cpuEntityId: String
     @Binding var memoryEntityId: String
     @Binding var diskEntityId: String
-    @Binding var menuBarEntityId: String
+    @Binding var menuBarEntityIds: [String]
     @Binding var launchAtLogin: Bool
     @Binding var notificationsEnabled: Bool
     
@@ -380,7 +523,7 @@ struct SettingsLogicModifier: ViewModifier {
             .onChange(of: cpuEntityId) { _, n in UserDefaults.standard.set(n, forKey: "cpuEntityId") }
             .onChange(of: memoryEntityId) { _, n in UserDefaults.standard.set(n, forKey: "memoryEntityId") }
             .onChange(of: diskEntityId) { _, n in UserDefaults.standard.set(n, forKey: "diskEntityId") }
-            .onChange(of: menuBarEntityId) { _, n in service.menuBarEntityId = n }
+            .onChange(of: menuBarEntityIds) { _, n in service.menuBarEntityIds = n }
             
         return entities
             .onChange(of: launchAtLogin) { _, n in service.launchAtLogin = n }
@@ -402,10 +545,14 @@ struct InfoRow: View {
     let value: String
     var body: some View {
         HStack {
-            Text(label).foregroundStyle(.secondary)
+            Text(label)
+                .font(.system(size: 11))
+                .foregroundStyle(.white.opacity(0.5))
             Spacer()
-            Text(value).font(.system(.body, design: .monospaced))
-        }.font(.caption)
+            Text(value)
+                .font(.system(size: 11, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.9))
+        }
     }
 }
 
@@ -422,22 +569,57 @@ enum AppearanceMode: String, CaseIterable, Identifiable {
     }
 }
 
+// Collapsible iStats-style section
 struct SettingsSection<Content: View>: View {
     let title: String
     let icon: String
     let color: Color
+    var isExpandedByDefault: Bool = true
     @ViewBuilder var content: Content
+    
+    @State private var isExpanded: Bool = true
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
-                ZStack {
-                    Circle().fill(color.opacity(0.15)).frame(width: 24, height: 24)
-                    Image(systemName: icon).font(.system(size: 11, weight: .bold)).foregroundStyle(color)
+        VStack(alignment: .leading, spacing: 0) {
+            // Clickable header
+            Button {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                    isExpanded.toggle()
                 }
-                Text(title).font(.caption).fontWeight(.bold).foregroundStyle(.secondary).textCase(.uppercase)
-            }.padding(.leading, 4)
-            VStack { content }.padding(16).background(.thickMaterial).clipShape(RoundedRectangle(cornerRadius: 16))
-                .overlay(RoundedRectangle(cornerRadius: 16).stroke(color.opacity(0.1), lineWidth: 1))
+            } label: {
+                HStack(spacing: 8) {
+                    Text(title.uppercased())
+                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .foregroundStyle(color)
+                        .tracking(1.2)
+                    
+                    Spacer()
+                    
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.3))
+                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                }
+                .padding(.horizontal, 4)
+                .padding(.vertical, 8)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            
+            // Content card (collapsible)
+            if isExpanded {
+                VStack(alignment: .leading, spacing: 0) { content }
+                    .padding(16)
+                    .background(Color.white.opacity(0.05))
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .transition(.asymmetric(
+                        insertion: .opacity.combined(with: .move(edge: .top)),
+                        removal: .opacity
+                    ))
+            }
+        }
+        .onAppear {
+            isExpanded = isExpandedByDefault
         }
     }
 }
@@ -450,11 +632,16 @@ struct ThresholdSlider: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text(title).font(.subheadline)
+                Text(title)
+                    .font(.system(size: 12))
+                    .foregroundStyle(.white.opacity(0.8))
                 Spacer()
-                Text("\(Int(value))%").monospaced().foregroundStyle(color).fontWeight(.bold)
+                Text("\(Int(value))%")
+                    .font(.system(size: 12, weight: .bold, design: .monospaced))
+                    .foregroundStyle(color)
             }
-            Slider(value: $value, in: range, step: 5).tint(color)
+            Slider(value: $value, in: range, step: 5)
+                .tint(color)
         }
     }
 }
@@ -462,16 +649,21 @@ struct ThresholdSlider: View {
 struct TestResultView: View {
     let result: SettingsView.TestResult
     var body: some View {
-        HStack {
-            ZStack {
-                Circle().fill(color.opacity(0.2)).frame(width: 24, height: 24)
-                Image(systemName: icon).font(.system(size: 12, weight: .bold)).foregroundStyle(color)
-            }
-            Text(message).font(.caption).foregroundStyle(color)
-        }.padding(12).frame(maxWidth: .infinity, alignment: .leading).background(color.opacity(0.1)).clipShape(RoundedRectangle(cornerRadius: 12))
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(color)
+            Text(message)
+                .font(.system(size: 11))
+                .foregroundStyle(.white.opacity(0.9))
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(color.opacity(0.15))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
     private var color: Color { resultCase == .success ? .green : .red }
-    private var icon: String { resultCase == .success ? "checkmark" : "xmark" }
+    private var icon: String { resultCase == .success ? "checkmark.circle.fill" : "xmark.circle.fill" }
     private var resultCase: ResultCase {
         switch result {
         case .success: return .success
@@ -495,41 +687,69 @@ struct EntitySelectorRow: View {
     let onSelect: () -> Void
     var body: some View {
         HStack(spacing: 12) {
-            ZStack {
-                Circle().fill(color.opacity(0.15)).frame(width: 32, height: 32)
-                Image(systemName: icon).font(.caption).foregroundStyle(color)
-            }
+            Image(systemName: icon)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(color)
+                .frame(width: 20)
+            
             VStack(alignment: .leading, spacing: 2) {
-                Text(label).font(.subheadline).fontWeight(.medium)
-                Text(entityId.isEmpty ? "Not configured" : entityId).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                Text(label)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.9))
+                Text(entityId.isEmpty ? "Not configured" : entityId)
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.4))
+                    .lineLimit(1)
             }
             Spacer()
             HStack(spacing: 8) {
                 if !entityId.isEmpty {
-                    Button { entityId = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }.buttonStyle(.plain)
+                    Button { entityId = "" } label: { 
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.white.opacity(0.2)) 
+                    }.buttonStyle(.plain)
                 }
-                Button("Select") { onSelect() }.buttonStyle(.bordered).controlSize(.small)
+                Button { onSelect() } label: {
+                    Text("Select")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(color)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(color.opacity(0.2))
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                }.buttonStyle(.plain)
             }
-        }.padding(10).background(.ultraThinMaterial).clipShape(RoundedRectangle(cornerRadius: 12))
+        }
+        .padding(10)
+        .background(Color.white.opacity(0.03))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 }
 
 struct EntityPickerSheet: View {
     @ObservedObject var service: HomeAssistantService
     let pickerType: SettingsView.EntityPickerType
+    var excludedEntityIds: [String] = []
     let onSelect: (String) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
+    
     private var title: String {
         switch pickerType {
         case .cpu: return "Select CPU Sensor"
         case .memory: return "Select Memory Sensor"
         case .disk: return "Select Disk Sensor"
-        case .menuBar: return "Select Menu Bar Sensor"
+        case .menuBar: return "Add Menu Bar Sensor"
         }
     }
+    
+    private var accentColor: Color {
+        .cyan // Uniform accent color
+    }
+    
     private var filteredSensors: [HAEntityState] {
-        let sensors = service.states.filter { $0.entityId.hasPrefix("sensor.") }
+        let sensors = service.states.filter { $0.entityId.hasPrefix("sensor.") && !excludedEntityIds.contains($0.entityId) }
         let result = searchText.isEmpty ? sensors.filter { entity in
             let id = entity.entityId.lowercased()
             let name = entity.friendlyName.lowercased()
@@ -537,74 +757,130 @@ struct EntityPickerSheet: View {
             case .cpu: return id.contains("cpu") || id.contains("processor") || name.contains("cpu") || name.contains("processor")
             case .memory: return id.contains("memory") || id.contains("ram") || id.contains("geheugen") || name.contains("memory") || name.contains("ram") || name.contains("geheugen")
             case .disk: return id.contains("disk") || id.contains("storage") || id.contains("schijf") || name.contains("disk") || name.contains("storage") || name.contains("schijf")
-            case .menuBar: return true // Show all sensors for menu bar selection
+            case .menuBar: return true
             }
         } : sensors.filter { $0.entityId.localizedCaseInsensitiveContains(searchText) || $0.friendlyName.localizedCaseInsensitiveContains(searchText) }
         return result.sorted { $0.friendlyName < $1.friendlyName }
     }
+    
     var body: some View {
         VStack(spacing: 0) {
             header
             searchBar
-            Divider()
             list
-            footer
-        }.frame(width: 400, height: 450).background(.regularMaterial)
+        }
+        .frame(width: 400, height: 500)
+        .background(
+            LinearGradient(
+                colors: [Color(red: 0.12, green: 0.13, blue: 0.20), Color(red: 0.08, green: 0.09, blue: 0.14)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
     }
+    
     private var header: some View {
         HStack(spacing: 12) {
-            ZStack {
-                Circle().fill(Color.blue.opacity(0.15)).frame(width: 32, height: 32)
-                Image(systemName: "magnifyingglass").font(.caption).foregroundStyle(.blue)
-            }
-            Text(title).font(.headline)
+            Text(title)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(.white)
             Spacer()
-            Button { dismiss() } label: { Image(systemName: "xmark.circle.fill").font(.title2).foregroundStyle(.secondary) }.buttonStyle(.plain)
-        }.padding().background(.ultraThinMaterial)
+            Button { dismiss() } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 18))
+                    .foregroundStyle(.white.opacity(0.3))
+            }.buttonStyle(.plain)
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
+        .background(Color.white.opacity(0.05))
     }
+    
     private var searchBar: some View {
-        HStack {
-            Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-            TextField("Search sensors...", text: $searchText).textFieldStyle(.plain)
-            if !searchText.isEmpty { Button { searchText = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }.buttonStyle(.plain) }
-        }.padding(12).background(.thickMaterial).clipShape(RoundedRectangle(cornerRadius: 10)).padding()
+        HStack(spacing: 10) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 12))
+                .foregroundStyle(.white.opacity(0.4))
+            TextField("Search sensors...", text: $searchText)
+                .textFieldStyle(.plain)
+                .font(.system(size: 13))
+                .foregroundStyle(.white)
+            if !searchText.isEmpty {
+                Button { searchText = "" } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.white.opacity(0.3))
+                }.buttonStyle(.plain)
+            }
+        }
+        .padding(12)
+        .background(Color.white.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .padding()
     }
+    
     private var list: some View {
         Group {
             if filteredSensors.isEmpty {
-                ContentUnavailableView { Label("No Sensors Found", systemImage: "magnifyingglass") } description: { Text("Try searching for a different term") }
+                VStack(spacing: 12) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 32))
+                        .foregroundStyle(.white.opacity(0.2))
+                    Text("No sensors found")
+                        .font(.system(size: 13))
+                        .foregroundStyle(.white.opacity(0.4))
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                ScrollView { LazyVStack(spacing: 1) { ForEach(filteredSensors) { s in SensorPickerRow(sensor: s) { onSelect(s.entityId) } } }.padding(.vertical, 4) }
+                ScrollView {
+                    LazyVStack(spacing: 4) {
+                        ForEach(filteredSensors) { sensor in
+                            SensorPickerRow(sensor: sensor, accentColor: accentColor) {
+                                onSelect(sensor.entityId)
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom)
+                }
             }
         }
-    }
-    private var footer: some View {
-        HStack {
-            Image(systemName: "lightbulb.fill").foregroundStyle(.yellow)
-            Text("Tip: Search for your sensor name in any language").font(.caption).foregroundStyle(.secondary)
-        }.padding().background(.ultraThinMaterial)
     }
 }
 
 struct SensorPickerRow: View {
     let sensor: HAEntityState
+    var accentColor: Color = .cyan
     let onSelect: () -> Void
     @State private var isHovering = false
+    
     var body: some View {
         Button(action: onSelect) {
             HStack(spacing: 12) {
-                ZStack {
-                    Circle().fill(Color.blue.opacity(0.1)).frame(width: 28, height: 28)
-                    Image(systemName: "sensor.fill").font(.caption).foregroundStyle(.blue)
-                }
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(sensor.friendlyName).font(.body).foregroundStyle(.primary)
-                    Text(sensor.entityId).font(.caption2).foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(sensor.friendlyName)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.9))
+                    Text(sensor.entityId)
+                        .font(.system(size: 9, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.3))
                 }
                 Spacer()
-                Text(sensor.displayState).font(.system(.caption, design: .rounded, weight: .bold)).padding(.horizontal, 8).padding(.vertical, 4).background(Color.blue.opacity(0.15)).foregroundStyle(.blue).clipShape(Capsule())
-            }.padding(.horizontal, 12).padding(.vertical, 8).background(isHovering ? Color.accentColor.opacity(0.1) : Color.clear).contentShape(Rectangle())
-        }.buttonStyle(.plain).onHover { hovering in isHovering = hovering }
+                Text(sensor.displayState)
+                    .font(.system(size: 10, weight: .bold, design: .rounded))
+                    .foregroundStyle(accentColor)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(isHovering ? accentColor.opacity(0.15) : Color.white.opacity(0.03))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.15)) {
+                isHovering = hovering
+            }
+        }
     }
 }
 
@@ -613,14 +889,102 @@ struct ThresholdPreview: View {
     let range: String
     let color: Color
     var body: some View {
-        VStack(spacing: 4) {
-            ZStack {
-                Circle().fill(color.opacity(0.2)).frame(width: 20, height: 20)
-                Circle().fill(color).frame(width: 8, height: 8)
+        VStack(spacing: 6) {
+            Circle()
+                .fill(color)
+                .frame(width: 10, height: 10)
+                .shadow(color: color.opacity(0.5), radius: 4)
+            Text(label)
+                .font(.system(size: 9, weight: .bold))
+                .foregroundStyle(color)
+            Text(range)
+                .font(.system(size: 8, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.4))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 10)
+        .background(color.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+}
+
+// MARK: - Menu Bar Sensor Row
+struct MenuBarSensorRow: View {
+    let index: Int
+    let entityId: String
+    @ObservedObject var service: HomeAssistantService
+    let onRemove: () -> Void
+    let onMoveUp: (() -> Void)?
+    let onMoveDown: (() -> Void)?
+    
+    private var entity: HAEntityState? {
+        service.states.first { $0.entityId == entityId }
+    }
+    
+    var body: some View {
+        HStack(spacing: 10) {
+            // Order number - cyan accent (uniform with system health)
+            Text("\(index + 1)")
+                .font(.system(size: 9, weight: .black))
+                .foregroundStyle(.white)
+                .frame(width: 16, height: 16)
+                .background(Circle().fill(Color.cyan))
+            
+            // Sensor info
+            VStack(alignment: .leading, spacing: 2) {
+                Text(entity?.friendlyName ?? entityId)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.9))
+                    .lineLimit(1)
+                
+                HStack(spacing: 4) {
+                    if let state = entity {
+                        Text(state.displayState)
+                            .font(.system(size: 10, weight: .bold, design: .rounded))
+                            .foregroundStyle(.cyan)
+                    } else {
+                        Text(entityId)
+                            .font(.system(size: 9, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.3))
+                            .lineLimit(1)
+                    }
+                }
             }
-            Text(label).font(.caption2).fontWeight(.bold).foregroundStyle(color)
-            Text(range).font(.caption2).foregroundStyle(.secondary)
-        }.frame(maxWidth: .infinity)
+            
+            Spacer()
+            
+            // Actions
+            HStack(spacing: 8) {
+                HStack(spacing: 2) {
+                    if let moveUp = onMoveUp {
+                        Button { moveUp() } label: {
+                            Image(systemName: "chevron.up")
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundStyle(.white.opacity(0.3))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    if let moveDown = onMoveDown {
+                        Button { moveDown() } label: {
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundStyle(.white.opacity(0.3))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                
+                Button { onRemove() } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.white.opacity(0.2))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(10)
+        .background(Color.white.opacity(0.03))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }
 

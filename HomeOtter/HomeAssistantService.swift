@@ -21,6 +21,8 @@ class HomeAssistantService: ObservableObject {
             updateLaunchAtLogin(launchAtLogin)
         }
     }
+    // Menu bar sensor IDs - @Published for automatic UI updates
+    @Published var menuBarSensorIds: [String] = []
     
     private var refreshTimer: Timer?
     private var refreshInterval: TimeInterval {
@@ -37,7 +39,8 @@ class HomeAssistantService: ObservableObject {
     private let tokenKey = "homeAssistantToken"
     private let dashboardEntitiesKey = "dashboardEntities"
     private let launchAtLoginKey = "launchAtLogin"
-    private let menuBarEntityIdKey = "menuBarEntityId"
+    private let menuBarEntityIdsKey = "menuBarEntityIds"
+    private let legacyMenuBarEntityIdKey = "menuBarEntityId" // For migration
     
     var baseURL: String {
         get { UserDefaults.standard.string(forKey: urlKey) ?? "" }
@@ -55,12 +58,44 @@ class HomeAssistantService: ObservableObject {
         }
     }
     
-    var menuBarEntityId: String {
-        get { UserDefaults.standard.string(forKey: menuBarEntityIdKey) ?? "" }
-        set { 
-            UserDefaults.standard.set(newValue, forKey: menuBarEntityIdKey)
+    // Maximum number of menu bar sensors
+    static let maxMenuBarSensors = 6
+    
+    // Computed property that syncs with UserDefaults AND updates @Published menuBarSensorIds
+    var menuBarEntityIds: [String] {
+        get { menuBarSensorIds }
+        set {
+            let limitedIds = Array(newValue.filter { !$0.isEmpty }.prefix(Self.maxMenuBarSensors))
+            menuBarSensorIds = limitedIds
+            UserDefaults.standard.set(limitedIds, forKey: menuBarEntityIdsKey)
+            // Force UI update
             objectWillChange.send()
         }
+    }
+    
+    // Helper to add a menu bar entity
+    func addMenuBarEntity(_ entityId: String) {
+        guard !menuBarEntityIds.contains(entityId),
+              menuBarEntityIds.count < Self.maxMenuBarSensors else { return }
+        var ids = menuBarEntityIds
+        ids.append(entityId)
+        menuBarEntityIds = ids
+    }
+    
+    // Helper to remove a menu bar entity
+    func removeMenuBarEntity(_ entityId: String) {
+        var ids = menuBarEntityIds
+        ids.removeAll { $0 == entityId }
+        menuBarEntityIds = ids
+    }
+    
+    // Helper to swap menu bar entities
+    func swapMenuBarEntities(from sourceIndex: Int, to destinationIndex: Int) {
+        var ids = menuBarEntityIds
+        guard sourceIndex >= 0, sourceIndex < ids.count,
+              destinationIndex >= 0, destinationIndex < ids.count else { return }
+        ids.swapAt(sourceIndex, destinationIndex)
+        menuBarEntityIds = ids
     }
     
     var dashboardEntities: [DashboardEntity] {
@@ -155,6 +190,9 @@ class HomeAssistantService: ObservableObject {
     }
     
     init() {
+        // Load menu bar sensors from defaults (with legacy migration)
+        self.menuBarSensorIds = loadMenuBarEntityIds()
+        
         // Sync launch at login status
         self.launchAtLogin = SMAppService.mainApp.status == .enabled
         UserDefaults.standard.set(self.launchAtLogin, forKey: launchAtLoginKey)
@@ -172,6 +210,22 @@ class HomeAssistantService: ObservableObject {
                 await refresh()
             }
         }
+    }
+
+    private func loadMenuBarEntityIds() -> [String] {
+        if let ids = UserDefaults.standard.stringArray(forKey: menuBarEntityIdsKey) {
+            return ids.filter { !$0.isEmpty }
+        }
+        
+        // Migrate from legacy single entity
+        if let legacyId = UserDefaults.standard.string(forKey: legacyMenuBarEntityIdKey), !legacyId.isEmpty {
+            let ids = [legacyId]
+            UserDefaults.standard.set(ids, forKey: menuBarEntityIdsKey)
+            UserDefaults.standard.removeObject(forKey: legacyMenuBarEntityIdKey)
+            return ids
+        }
+        
+        return []
     }
     
     func startAutoRefresh() {

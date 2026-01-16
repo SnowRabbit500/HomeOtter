@@ -42,7 +42,7 @@ struct EntityBrowserView: View {
             HStack {
                 Image(systemName: "square.grid.2x2")
                     .font(.title2)
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(.cyan)
                 Text("Browse Entities")
                     .font(.headline)
                 Spacer()
@@ -128,7 +128,7 @@ struct DomainPill: View {
                 .font(.caption)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
-                .background(isSelected ? Color.accentColor : Color.secondary.opacity(0.2))
+                .background(isSelected ? Color.cyan : Color.secondary.opacity(0.2))
                 .foregroundStyle(isSelected ? .white : .primary)
                 .clipShape(Capsule())
         }
@@ -193,7 +193,7 @@ struct EntityBrowserRow: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(isHovering ? Color.accentColor.opacity(0.1) : Color.clear)
+        .background(isHovering ? Color.cyan.opacity(0.1) : Color.clear)
         .onHover { hovering in
             isHovering = hovering
         }
@@ -208,7 +208,7 @@ struct EntityBrowserRow: View {
         case "unavailable", "unknown":
             return .red
         default:
-            return .blue
+            return .cyan
         }
     }
 }
