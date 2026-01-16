@@ -20,7 +20,7 @@
 
 <p align="center">
   <a href="https://i.postimg.cc/yYH36Svw/Screenshot_2026_01_16_at_11_19_48.png" target="_blank">
-    <img src="https://i.postimg.cc/yYH36Svw/Screenshot_2026_01_16_at_11_19_48.png" alt="HomeOtter Dashboard" width="500">
+    <img src="https://i.postimg.cc/yYH36Svw/Screenshot_2026_01_16_at_11_19_48.png" alt="HomeOtter Dashboard" width="380">
   </a>
 </p>
 
