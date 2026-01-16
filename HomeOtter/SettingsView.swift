@@ -378,7 +378,7 @@ struct SettingsView: View {
                         .foregroundStyle(.white.opacity(0.4))
                 }
                 Spacer()
-                Text("v1.0")
+                Text("v1.0.1")
                     .font(.system(size: 10, weight: .medium, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.3))
                     .padding(.horizontal, 8)
